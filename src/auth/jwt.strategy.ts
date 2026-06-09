@@ -9,7 +9,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') ?? 'fallback_secret', // ← FIXED
+      secretOrKey: configService.get<string>('JWT_SECRET') ?? 'fallback_secret',
     });
   }
 
@@ -17,6 +17,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!payload) {
       throw new UnauthorizedException();
     }
-    return { userId: payload.sub, email: payload.email };
+    // ← ADDED role to the returned user object
+    return { userId: payload.sub, email: payload.email, role: payload.role };
   }
 }

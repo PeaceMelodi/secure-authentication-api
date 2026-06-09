@@ -1,16 +1,18 @@
-import { Injectable, ConflictException, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import { User } from './user.entity';
+import { User, UserRole } from './user.entity';
 import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
+import { AdminRegisterDto } from './dto/admin-register.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private configService: ConfigService, // ← ADDED
   ) {}
 
   async register(dto: RegisterDto) {
@@ -25,25 +27,36 @@ export class UserService {
       name: dto.name,
       email: dto.email,
       password: hashedPassword,
+      role: UserRole.USER, // ← always user
     });
 
     await this.userRepository.save(user);
-
     return { message: 'User registered successfully' };
   }
 
-  async login(dto: LoginDto) {
-    const user = await this.userRepository.findOne({ where: { email: dto.email } });
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+  async registerAdmin(dto: AdminRegisterDto) {
+    // Check admin secret key
+    const adminSecretKey = this.configService.get<string>('ADMIN_SECRET_KEY');
+    if (dto.adminSecretKey !== adminSecretKey) {
+      throw new ForbiddenException('Invalid admin secret key');
     }
 
-    const passwordMatch = await bcrypt.compare(dto.password, user.password);
-    if (!passwordMatch) {
-      throw new UnauthorizedException('Invalid credentials');
+    const existing = await this.userRepository.findOne({ where: { email: dto.email } });
+    if (existing) {
+      throw new ConflictException('Email already in use');
     }
 
-    return { message: 'Login successful', userId: user.id };
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+    const user = this.userRepository.create({
+      name: dto.name,
+      email: dto.email,
+      password: hashedPassword,
+      role: UserRole.ADMIN, // ← always admin
+    });
+
+    await this.userRepository.save(user);
+    return { message: 'Admin registered successfully' };
   }
 
   async getProfile(id: number) {
@@ -54,5 +67,10 @@ export class UserService {
 
     const { password, ...profile } = user;
     return profile;
+  }
+
+  async getAllUsers() {
+    const users = await this.userRepository.find();
+    return users.map(({ password, ...user }) => user);
   }
 }

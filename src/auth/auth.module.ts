@@ -8,6 +8,7 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { Token } from './token.entity';
 import { User } from '../user/user.entity';
+import { LoginAttemptService } from './login-attempt.service'; // ← ADDED
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { User } from '../user/user.entity';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, LoginAttemptService], // ← ADDED LoginAttemptService
   exports: [AuthService],
 })
 export class AuthModule {}
