@@ -5,23 +5,24 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('Secure Authentication API')
     .setDescription(
-      `A production-ready authentication API built with NestJS. 
+      `A production-ready authentication API built with NestJS.
       
 ## Features
-- User Registration & Login
-- JWT Access & Refresh Tokens
-- Token Blacklisting on Logout
-- Role Based Access Control (Admin & User)
-- Rate Limiting & Brute Force Protection
+-  User Registration & Login
+-  JWT Access & Refresh Tokens
+-  Token Blacklisting on Logout
+-  Role Based Access Control (Admin & User)
+-  Rate Limiting & Brute Force Protection
 
 ## Authentication
 This API uses **Bearer Token** authentication. After logging in, copy the \`accessToken\` from the response and click the **Authorize** button at the top right to authenticate your requests.`,
     )
     .setVersion('1.0')
+    .addServer('https://secure-authentication-api.onrender.com', 'Production Server')
+    .addServer('http://localhost:3000', 'Local Development')
     .addBearerAuth(
       {
         type: 'http',
@@ -38,9 +39,11 @@ This API uses **Bearer Token** authentication. After logging in, copy the \`acce
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
+
   SwaggerModule.setup('api', app, document, {
     swaggerOptions: {
-      persistAuthorization: true, // keeps token saved when you refresh the page
+      persistAuthorization: true,
+      defaultModelsExpandDepth: -1, 
     },
     customSiteTitle: 'Secure Auth API Docs',
   });

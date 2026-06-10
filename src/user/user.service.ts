@@ -12,7 +12,7 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    private configService: ConfigService, // ← ADDED
+    private configService: ConfigService, 
   ) {}
 
   async register(dto: RegisterDto) {
@@ -27,7 +27,7 @@ export class UserService {
       name: dto.name,
       email: dto.email,
       password: hashedPassword,
-      role: UserRole.USER, // ← always user
+      role: UserRole.USER, 
     });
 
     await this.userRepository.save(user);
@@ -52,7 +52,7 @@ export class UserService {
       name: dto.name,
       email: dto.email,
       password: hashedPassword,
-      role: UserRole.ADMIN, // ← always admin
+      role: UserRole.ADMIN, 
     });
 
     await this.userRepository.save(user);
